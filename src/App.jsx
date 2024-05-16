@@ -6,7 +6,7 @@ import SearchForm from './components/SearchForm';
 import VideoList from './components/VideoList';
 import VideoPlayer from './components/VideoPlayer';
 
-const API_KEY = 'AIzaSyAQryODzfyqnVja2PMHtD2g5KEicoSKZqM'; // Replace with your actual API key
+const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY; // Replace with your actual API key
 
 
 function App() {
@@ -29,6 +29,7 @@ function App() {
 
   return (
     <div className="App">
+
       <h1>YouTube Search</h1>
       {selectedVideoId} hola
       <SearchForm onSearch={handleSearch} />
