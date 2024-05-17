@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import SearchForm from './components/SearchForm';
 import VideoList from './components/VideoList';
 import VideoPlayer from './components/VideoPlayer';
+import YoutubePlayer from './components/YoutubePlayer';
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY; // Replace with your actual API key
 
@@ -22,19 +23,20 @@ function App() {
   };
 
   function handleVideoClick(videoId) {
-    console.log(selectedVideoId)
+
     setSelectedVideoId(videoId);
   }
+
+
 
 
   return (
     <div className="App">
 
       <h1>YouTube Search</h1>
-      {selectedVideoId} hola
       <SearchForm onSearch={handleSearch} />
 
-      {selectedVideoId ? <VideoPlayer videoId={selectedVideoId} /> :
+      {selectedVideoId ? <YoutubePlayer videoId={selectedVideoId} /> :
         videos.length > 0 && (
           <>
             <h2>Search Results</h2>

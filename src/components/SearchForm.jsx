@@ -17,6 +17,7 @@ export default function SearchForm({ onSearch }) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="¿Qué video quieres dibujar?"
+                className='border border-slate-400 border-solid rounded-md px-2'
             />
             <button type="submit">Search</button>
         </form>
