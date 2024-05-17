@@ -17,7 +17,6 @@ export default function YoutubePlayer({ videoId }) {
 
     const startPauseResumeLoop = () => {
         const timerRef = setTimeout(() => {
-            console.log("Soy el pause time: " + pauseTimeRef.current);
             ytPlayer.current.pauseVideo();
             setIsPlaying(false);
             setCountdown(resumeTimeRef.current); // Reset countdown when video is paused
@@ -91,12 +90,10 @@ export default function YoutubePlayer({ videoId }) {
     }, [isPlaying]);
 
     useEffect(() => {
-        console.log(pauseTime);
         pauseTimeRef.current = pauseTime; // Update the pauseTimeRef when pauseTime changes
     }, [pauseTime]);
 
     useEffect(() => {
-        console.log(resumeTime);
         resumeTimeRef.current = resumeTime; // Update the resumeTimeRef when resumeTime changes
     }, [resumeTime]);
 
@@ -110,8 +107,6 @@ export default function YoutubePlayer({ videoId }) {
                         type="number"
                         value={pauseTime}
                         onChange={(e) => {
-                            console.log("hola");
-                            console.log(pauseTime);
                             setPauseTime(Number(e.target.value));
                         }}
                         min="1"
@@ -123,8 +118,6 @@ export default function YoutubePlayer({ videoId }) {
                         type="number"
                         value={resumeTime}
                         onChange={(e) => {
-                            console.log("hello");
-                            console.log(resumeTime);
                             setResumeTime(Number(e.target.value));
                         }}
                         min="1"
@@ -134,7 +127,6 @@ export default function YoutubePlayer({ videoId }) {
             <Timer secondsLeft={countdown} />
             <button onClick={toggleVideo}>{isPlaying ? 'Pause Video' : 'Play Video'}</button>
             <button className="block" onClick={() => {
-                console.log(pauseTime);
                 setPauseTime(3);
             }}>test</button>
         </>
