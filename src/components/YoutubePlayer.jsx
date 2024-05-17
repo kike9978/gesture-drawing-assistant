@@ -1,41 +1,42 @@
 import { useEffect, useRef, useState } from "react";
 
+function Timer({ secondsLeft }) {
+    return <p>{secondsLeft > 0 ? secondsLeft + " seconds left" : "Paused"}</p>;
+}
+
 export default function YoutubePlayer({ videoId }) {
     const playerRef = useRef(null); // Reference to the div element that will contain the YouTube player
     const ytPlayer = useRef(null); // Reference to the YouTube player instance
     const [isPlaying, setIsPlaying] = useState(false); // State to track whether the video is playing
-    const pauseTimeoutRef = useRef(null); // Reference to store the pause timeout ID
-    const resumeTimeoutRef = useRef(null); // Reference to store the resume timeout ID
-
     const [pauseTime, setPauseTime] = useState(1); // State for the pause timer (in seconds)
     const [resumeTime, setResumeTime] = useState(10); // State for the resume timer (in seconds)
+    const [countdown, setCountdown] = useState(0); // State for the countdown
 
     const startPauseResumeLoop = () => {
-        clearTimeout(pauseTimeoutRef.current);
-        clearTimeout(resumeTimeoutRef.current);
-
-        pauseTimeoutRef.current = setTimeout(() => {
+        const timerRef = setTimeout(() => {
             ytPlayer.current.pauseVideo();
             setIsPlaying(false);
+            setCountdown(resumeTime); // Reset countdown when video is paused
 
-            resumeTimeoutRef.current = setTimeout(() => {
+            setTimeout(() => {
                 ytPlayer.current.playVideo();
                 setIsPlaying(true);
                 startPauseResumeLoop(); // Restart the loop
             }, resumeTime * 1000); // Resume the video after resumeTime seconds
         }, pauseTime * 1000); // Pause the video after pauseTime seconds
+
+        return timerRef;
     };
 
     const toggleVideo = () => {
         if (ytPlayer.current) {
             if (isPlaying) {
                 ytPlayer.current.pauseVideo();
-                clearTimeout(pauseTimeoutRef.current); // Clear any existing pause timeout
-                clearTimeout(resumeTimeoutRef.current); // Clear any existing resume timeout
+                setIsPlaying(false);
+                setCountdown(resumeTime); // Reset countdown when video is manually paused
             } else {
                 ytPlayer.current.playVideo();
                 setIsPlaying(true); // Update the state to playing
-                startPauseResumeLoop(); // Start the loop
             }
         }
     };
@@ -52,6 +53,7 @@ export default function YoutubePlayer({ videoId }) {
                     onStateChange: (event) => {
                         if (event.data === window.YT.PlayerState.PLAYING) {
                             setIsPlaying(true);
+                            startPauseResumeLoop(); // Start the loop when video starts playing
                         } else if (event.data === window.YT.PlayerState.PAUSED) {
                             setIsPlaying(false);
                         }
@@ -70,13 +72,19 @@ export default function YoutubePlayer({ videoId }) {
 
             return () => {
                 document.body.removeChild(script);
-                clearTimeout(pauseTimeoutRef.current); // Clear pause timeout on component unmount
-                clearTimeout(resumeTimeoutRef.current); // Clear resume timeout on component unmount
             };
         } else {
             onYouTubeIframeAPIReady();
         }
     }, [videoId]);
+
+    useEffect(() => {
+        const countdownInterval = setInterval(() => {
+            setCountdown((prevCountdown) => prevCountdown > 0 ? prevCountdown - 1 : 0);
+        }, 1000);
+
+        return () => clearInterval(countdownInterval);
+    }, [isPlaying]);
 
     return (
         <>
@@ -101,6 +109,7 @@ export default function YoutubePlayer({ videoId }) {
                     />
                 </label>
             </div>
+            <Timer secondsLeft={countdown} />
             <button onClick={toggleVideo}>{isPlaying ? 'Pause Video' : 'Play Video'}</button>
         </>
     );
