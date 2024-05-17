@@ -12,7 +12,7 @@ const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY; // Replace with your actua
 
 function App() {
   const [videos, setVideos] = useState([]);
-  const [selectedVideoId, setSelectedVideoId] = useState(null);
+  const [selectedVideoId, setSelectedVideoId] = useState("bufoKYZXpKg");
 
   const handleSearch = async (query) => {
     setSelectedVideoId(null)
@@ -26,7 +26,6 @@ function App() {
 
     setSelectedVideoId(videoId);
   }
-
 
 
 
