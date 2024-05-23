@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 function Timer({ secondsLeft }) {
-    return <p>{secondsLeft > 0 ? secondsLeft + " seconds left" : "Paused"}</p>;
+    return <p>{secondsLeft > 0 ? secondsLeft + " seconds left" : "Playing"}</p>;
 }
 
 export default function YoutubePlayer({ videoId }) {
@@ -23,6 +23,7 @@ export default function YoutubePlayer({ videoId }) {
 
             setTimeout(() => {
                 ytPlayer.current.playVideo();
+
                 setIsPlaying(true);
                 startPauseResumeLoop(); // Restart the loop
             }, resumeTimeRef.current * 1000); // Resume the video after resumeTime seconds
