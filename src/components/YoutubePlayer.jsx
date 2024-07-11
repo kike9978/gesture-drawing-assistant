@@ -18,28 +18,38 @@ const YouTubePlayer = ({ videoId }) => {
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        window.onYouTubeIframeAPIReady = () => {
-            playerRef.current = new window.YT.Player('youtube-player', {
-                height: '360',
-                width: '640',
-                videoId: videoId,
-                playerVars: {
-                    rel: 0,
-                    modestbranding: 1,
-                    controls: 1,
-                    iv_load_policy: 3,
-                },
-                events: {
-                    onReady: onPlayerReady,
-                    onStateChange: onPlayerStateChange,
-                },
-            });
-        };
+        window.onYouTubeIframeAPIReady = initializePlayer;
 
         return () => {
             window.onYouTubeIframeAPIReady = null;
         };
+    }, []);
+
+    const initializePlayer = useCallback(() => {
+        playerRef.current = new window.YT.Player('youtube-player', {
+            height: '360',
+            width: '640',
+            videoId: videoId,
+            playerVars: {
+                rel: 0,
+                modestbranding: 1,
+                controls: 1,
+                iv_load_policy: 3,
+            },
+            events: {
+                onReady: onPlayerReady,
+                onStateChange: onPlayerStateChange,
+            },
+        });
     }, [videoId]);
+
+    useEffect(() => {
+        if (playerRef.current && playerRef.current.loadVideoById) {
+            playerRef.current.loadVideoById(videoId);
+        } else if (window.YT && window.YT.Player) {
+            initializePlayer();
+        }
+    }, [videoId, initializePlayer]);
 
     const onPlayerReady = (event) => {
         console.log('Player is ready');

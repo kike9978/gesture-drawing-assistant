@@ -7,7 +7,7 @@ const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 function App() {
   const [videos, setVideos] = useState([]);
-  const [selectedVideoId, setSelectedVideoId] = useState("bufoKYZXpKg");
+  const [selectedVideoId, setSelectedVideoId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,9 +21,7 @@ function App() {
       }
       const data = await response.json();
       setVideos(data.items);
-      if (data.items.length > 0) {
-        setSelectedVideoId(data.items[0].id.videoId);
-      }
+
     } catch (err) {
       setError(err.message);
     } finally {
