@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const YouTubePlayer = ({ videoId }) => {
     const [isPlaying, setIsPlaying] = useState(false);
-    const [pauseDuration, setPauseDuration] = useState(5);
-    const [playDuration, setPlayDuration] = useState(10);
+    const [pauseDuration, setPauseDuration] = useState(10);
+    const [playDuration, setPlayDuration] = useState(1);
     const [countdown, setCountdown] = useState(null);
+    const [isHolding, setIsHolding] = useState(false);
     const playerRef = useRef(null);
     const timerRef = useRef(null);
 
@@ -19,6 +20,12 @@ const YouTubePlayer = ({ videoId }) => {
                 height: '360',
                 width: '640',
                 videoId: videoId,
+                playerVars: {
+                    rel: 0,
+                    modestbranding: 1,
+                    controls: 1,
+                    iv_load_policy: 3,
+                },
                 events: {
                     onReady: onPlayerReady,
                     onStateChange: onPlayerStateChange,
@@ -38,7 +45,9 @@ const YouTubePlayer = ({ videoId }) => {
     const onPlayerStateChange = (event) => {
         if (event.data === window.YT.PlayerState.PLAYING) {
             setIsPlaying(true);
-            startPlayTimer();
+            if (!isHolding) {
+                startPlayTimer();
+            }
         } else if (event.data === window.YT.PlayerState.PAUSED) {
             setIsPlaying(false);
             clearTimeout(timerRef.current);
@@ -48,13 +57,13 @@ const YouTubePlayer = ({ videoId }) => {
     const startPlayTimer = useCallback(() => {
         clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
-            if (playerRef.current && playerRef.current.pauseVideo) {
+            if (playerRef.current && playerRef.current.pauseVideo && !isHolding) {
                 playerRef.current.pauseVideo();
                 setCountdown(pauseDuration);
                 startPauseTimer();
             }
         }, playDuration * 1000);
-    }, [playDuration, pauseDuration]);
+    }, [playDuration, pauseDuration, isHolding]);
 
     const startPauseTimer = useCallback(() => {
         let remainingTime = pauseDuration;
@@ -63,12 +72,12 @@ const YouTubePlayer = ({ videoId }) => {
             setCountdown(remainingTime);
             if (remainingTime <= 0) {
                 clearInterval(countdownInterval);
-                if (playerRef.current && playerRef.current.playVideo) {
+                if (playerRef.current && playerRef.current.playVideo && !isHolding) {
                     playerRef.current.playVideo();
                 }
             }
         }, 1000);
-    }, [pauseDuration]);
+    }, [pauseDuration, isHolding]);
 
     useEffect(() => {
         return () => {
@@ -83,11 +92,11 @@ const YouTubePlayer = ({ videoId }) => {
     }, [videoId]);
 
     useEffect(() => {
-        if (isPlaying) {
+        if (isPlaying && !isHolding) {
             clearTimeout(timerRef.current);
             startPlayTimer();
         }
-    }, [playDuration, isPlaying, startPlayTimer]);
+    }, [playDuration, isPlaying, isHolding, startPlayTimer]);
 
     const handlePlayDurationChange = (e) => {
         setPlayDuration(Number(e.target.value));
@@ -95,6 +104,20 @@ const YouTubePlayer = ({ videoId }) => {
 
     const handlePauseDurationChange = (e) => {
         setPauseDuration(Number(e.target.value));
+    };
+
+    const toggleHold = () => {
+        setIsHolding((prev) => !prev);
+        if (!isHolding) {
+            clearTimeout(timerRef.current);
+            if (playerRef.current && playerRef.current.pauseVideo) {
+                playerRef.current.pauseVideo();
+            }
+        } else {
+            if (playerRef.current && playerRef.current.playVideo) {
+                playerRef.current.playVideo();
+            }
+        }
     };
 
     return (
@@ -113,7 +136,10 @@ const YouTubePlayer = ({ videoId }) => {
                 </label>
             </div>
             <div>
-                Status: {isPlaying ? 'Playing' : countdown !== null ? `Paused (${countdown}s remaining)` : 'Initial State'}
+                <button onClick={toggleHold}>{isHolding ? 'Resume' : 'Hold'}</button>
+            </div>
+            <div>
+                Status: {isHolding ? 'Holding' : isPlaying ? 'Playing' : countdown !== null ? `Paused (${countdown}s remaining)` : 'Initial State'}
             </div>
         </div>
     );
