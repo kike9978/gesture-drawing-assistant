@@ -7,7 +7,8 @@ const YouTubePlayer = ({ videoId }) => {
     const [countdown, setCountdown] = useState(null);
     const [isHolding, setIsHolding] = useState(false);
     const playerRef = useRef(null);
-    const timerRef = useRef(null);
+    const playTimerRef = useRef(null);
+    const pauseTimerRef = useRef(null);
 
     useEffect(() => {
         const tag = document.createElement('script');
@@ -50,50 +51,53 @@ const YouTubePlayer = ({ videoId }) => {
             }
         } else if (event.data === window.YT.PlayerState.PAUSED) {
             setIsPlaying(false);
-            clearTimeout(timerRef.current);
+            clearTimeout(playTimerRef.current);
         }
     };
 
+    const clearAllTimers = () => {
+        clearTimeout(playTimerRef.current);
+        clearTimeout(pauseTimerRef.current);
+    };
+
     const startPlayTimer = useCallback(() => {
-        clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
+        clearTimeout(playTimerRef.current);
+        playTimerRef.current = setTimeout(() => {
             if (playerRef.current && playerRef.current.pauseVideo && !isHolding) {
                 playerRef.current.pauseVideo();
-                setCountdown(pauseDuration);
                 startPauseTimer();
             }
         }, playDuration * 1000);
-    }, [playDuration, pauseDuration, isHolding]);
+    }, [playDuration, isHolding]);
 
     const startPauseTimer = useCallback(() => {
         let remainingTime = pauseDuration;
-        const countdownInterval = setInterval(() => {
+        setCountdown(remainingTime);
+
+        const countdownTick = () => {
             remainingTime -= 1;
             setCountdown(remainingTime);
+
             if (remainingTime <= 0) {
-                clearInterval(countdownInterval);
                 if (playerRef.current && playerRef.current.playVideo && !isHolding) {
                     playerRef.current.playVideo();
                 }
+            } else {
+                pauseTimerRef.current = setTimeout(countdownTick, 1000);
             }
-        }, 1000);
+        };
+
+        pauseTimerRef.current = setTimeout(countdownTick, 1000);
     }, [pauseDuration, isHolding]);
 
     useEffect(() => {
         return () => {
-            clearTimeout(timerRef.current);
+            clearAllTimers();
         };
     }, []);
 
     useEffect(() => {
-        if (playerRef.current && playerRef.current.loadVideoById) {
-            playerRef.current.loadVideoById(videoId);
-        }
-    }, [videoId]);
-
-    useEffect(() => {
         if (isPlaying && !isHolding) {
-            clearTimeout(timerRef.current);
             startPlayTimer();
         }
     }, [playDuration, isPlaying, isHolding, startPlayTimer]);
@@ -109,7 +113,7 @@ const YouTubePlayer = ({ videoId }) => {
     const toggleHold = () => {
         setIsHolding((prev) => !prev);
         if (!isHolding) {
-            clearTimeout(timerRef.current);
+            clearAllTimers();
             if (playerRef.current && playerRef.current.pauseVideo) {
                 playerRef.current.pauseVideo();
             }
