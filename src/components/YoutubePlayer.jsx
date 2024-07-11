@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import CircularCountdown from './CircularCountdown';
 
 const YouTubePlayer = ({ videoId }) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -9,6 +10,7 @@ const YouTubePlayer = ({ videoId }) => {
     const playerRef = useRef(null);
     const playTimerRef = useRef(null);
     const pauseTimerRef = useRef(null);
+    const [preciseCountdown, setPreciseCountdown] = useState(null);
 
     useEffect(() => {
         const tag = document.createElement('script');
@@ -72,22 +74,22 @@ const YouTubePlayer = ({ videoId }) => {
 
     const startPauseTimer = useCallback(() => {
         let remainingTime = pauseDuration;
-        setCountdown(remainingTime);
+        setPreciseCountdown(remainingTime);
 
         const countdownTick = () => {
-            remainingTime -= 1;
-            setCountdown(remainingTime);
+            remainingTime -= 0.1;
+            setPreciseCountdown(remainingTime);
 
             if (remainingTime <= 0) {
                 if (playerRef.current && playerRef.current.playVideo && !isHolding) {
                     playerRef.current.playVideo();
                 }
             } else {
-                pauseTimerRef.current = setTimeout(countdownTick, 1000);
+                pauseTimerRef.current = setTimeout(countdownTick, 100);
             }
         };
 
-        pauseTimerRef.current = setTimeout(countdownTick, 1000);
+        pauseTimerRef.current = setTimeout(countdownTick, 100);
     }, [pauseDuration, isHolding]);
 
     useEffect(() => {
@@ -124,29 +126,62 @@ const YouTubePlayer = ({ videoId }) => {
         }
     };
 
+
+
     return (
-        <div>
+        <div className="flex flex-col items-center space-y-4">
             <div id="youtube-player"></div>
-            <div>
-                <label>
-                    Play Duration (seconds):
-                    <input type="number" value={playDuration} onChange={handlePlayDurationChange} min="1" />
-                </label>
+            <div className="flex space-x-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                        Play Duration (seconds):
+                        <input
+                            type="number"
+                            value={playDuration}
+                            onChange={handlePlayDurationChange}
+                            min="1"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                        />
+                    </label>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                        Pause Duration (seconds):
+                        <input
+                            type="number"
+                            value={pauseDuration}
+                            onChange={handlePauseDurationChange}
+                            min="1"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                        />
+                    </label>
+                </div>
             </div>
-            <div>
-                <label>
-                    Pause Duration (seconds):
-                    <input type="number" value={pauseDuration} onChange={handlePauseDurationChange} min="1" />
-                </label>
+            <button
+                onClick={toggleHold}
+                className="px-4 py-2 font-semibold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+            >
+                {isHolding ? 'Resume' : 'Hold'}
+            </button>
+            <div className="text-center">
+                <p className="text-lg font-semibold mb-2">Status:</p>
+                {isHolding ? (
+                    <span className="text-yellow-600">Holding</span>
+                ) : isPlaying ? (
+                    <span className="text-green-600">Playing</span>
+                ) : preciseCountdown !== null ? (
+                    <div className="flex flex-col items-center">
+                        <span className="text-red-600 mb-2">Paused</span>
+                        <CircularCountdown countdown={preciseCountdown} duration={pauseDuration} />
+                    </div>
+                ) : (
+                    <span className="text-gray-600">Initial State</span>
+                )}
             </div>
-            <div>
-                <button onClick={toggleHold}>{isHolding ? 'Resume' : 'Hold'}</button>
-            </div>
-            <div>
-                Status: {isHolding ? 'Holding' : isPlaying ? 'Playing' : countdown !== null ? `Paused (${countdown}s remaining)` : 'Initial State'}
-            </div>
-        </div>
+
+        </div >
     );
 };
+
 
 export default YouTubePlayer;
