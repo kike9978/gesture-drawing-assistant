@@ -1,135 +1,117 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from 'react';
 
-function Timer({ secondsLeft }) {
-    return <p>{secondsLeft > 0 ? secondsLeft + " seconds left" : "Playing"}</p>;
-}
-
-export default function YoutubePlayer({ videoId }) {
-    const playerRef = useRef(null); // Reference to the div element that will contain the YouTube player
-    const ytPlayer = useRef(null); // Reference to the YouTube player instance
-    const [isPlaying, setIsPlaying] = useState(false); // State to track whether the video is playing
-    const [pauseTime, setPauseTime] = useState(1); // State for the pause timer (in seconds)
-    const [resumeTime, setResumeTime] = useState(2); // State for the resume timer (in seconds)
-    const [countdown, setCountdown] = useState(0); // State for the countdown
-
-    const pauseTimeRef = useRef(pauseTime); // Ref to store the current value of pauseTime
-    const resumeTimeRef = useRef(resumeTime); // Ref to store the current value of resumeTime
-
-    const startPauseResumeLoop = () => {
-        const timerRef = setTimeout(() => {
-            ytPlayer.current.pauseVideo();
-            setIsPlaying(false);
-            setCountdown(resumeTimeRef.current); // Reset countdown when video is paused
-
-            setTimeout(() => {
-                ytPlayer.current.playVideo();
-
-                setIsPlaying(true);
-                startPauseResumeLoop(); // Restart the loop
-            }, resumeTimeRef.current * 1000); // Resume the video after resumeTime seconds
-        }, pauseTimeRef.current * 1000); // Pause the video after pauseTime seconds
-
-        return timerRef;
-    };
-
-    const toggleVideo = () => {
-        if (ytPlayer.current) {
-            if (isPlaying) {
-                ytPlayer.current.pauseVideo();
-                setIsPlaying(false);
-                setCountdown(resumeTimeRef.current); // Reset countdown when video is manually paused
-            } else {
-                ytPlayer.current.playVideo();
-                setIsPlaying(true); // Update the state to playing
-            }
-        }
-    };
+const YouTubePlayer = ({ videoId }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [pauseDuration, setPauseDuration] = useState(5);
+    const [playDuration, setPlayDuration] = useState(10);
+    const [countdown, setCountdown] = useState(null);
+    const playerRef = useRef(null);
+    const timerRef = useRef(null);
 
     useEffect(() => {
-        const onYouTubeIframeAPIReady = () => {
-            ytPlayer.current = new window.YT.Player(playerRef.current, {
-                videoId,
-                playerVars: { autoplay: 0 }, // Disable autoplay
+        // Load YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Initialize player when API is ready
+        window.onYouTubeIframeAPIReady = () => {
+            playerRef.current = new window.YT.Player('youtube-player', {
+                height: '360',
+                width: '640',
+                videoId: videoId,
                 events: {
-                    onReady: () => {
-                        setIsPlaying(false); // Ensure state is reset when the player is ready
-                    },
-                    onStateChange: (event) => {
-                        if (event.data === window.YT.PlayerState.PLAYING) {
-                            setIsPlaying(true);
-                            startPauseResumeLoop(); // Start the loop when video starts playing
-                        } else if (event.data === window.YT.PlayerState.PAUSED) {
-                            setIsPlaying(false);
-                        }
-                    }
+                    onReady: onPlayerReady,
+                    onStateChange: onPlayerStateChange,
                 },
             });
         };
 
-        // Load the Iframe API
-        if (!window.YT) {
-            const script = document.createElement("script");
-            script.src = 'https://www.youtube.com/iframe_api';
-            script.async = true;
-            window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-            document.body.appendChild(script);
+        return () => {
+            window.onYouTubeIframeAPIReady = null;
+        };
+    }, [videoId]);
 
-            return () => {
-                document.body.removeChild(script);
-            };
-        } else {
-            onYouTubeIframeAPIReady();
+    const onPlayerReady = (event) => {
+        console.log('Player is ready');
+    };
+
+    const onPlayerStateChange = (event) => {
+        if (event.data === window.YT.PlayerState.PLAYING) {
+            setIsPlaying(true);
+            startPlayTimer();
+        } else if (event.data === window.YT.PlayerState.PAUSED) {
+            setIsPlaying(false);
+            clearTimeout(timerRef.current);
+        }
+    };
+
+    const startPlayTimer = () => {
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (playerRef.current && playerRef.current.pauseVideo) {
+                playerRef.current.pauseVideo();
+                setCountdown(pauseDuration);
+                startPauseTimer();
+            }
+        }, playDuration * 1000);
+    };
+
+    const startPauseTimer = () => {
+        let remainingTime = pauseDuration;
+        const countdownInterval = setInterval(() => {
+            remainingTime -= 1;
+            setCountdown(remainingTime);
+            if (remainingTime <= 0) {
+                clearInterval(countdownInterval);
+                if (playerRef.current && playerRef.current.playVideo) {
+                    playerRef.current.playVideo();
+                }
+            }
+        }, 1000);
+    };
+
+    useEffect(() => {
+        return () => {
+            clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (playerRef.current && playerRef.current.loadVideoById) {
+            playerRef.current.loadVideoById(videoId);
         }
     }, [videoId]);
 
-    useEffect(() => {
-        const countdownInterval = setInterval(() => {
-            setCountdown((prevCountdown) => prevCountdown > 0 ? prevCountdown - 1 : 0);
-        }, 1000);
+    const handlePlayDurationChange = (e) => {
+        setPlayDuration(Number(e.target.value));
+    };
 
-        return () => clearInterval(countdownInterval);
-    }, [isPlaying]);
-
-    useEffect(() => {
-        pauseTimeRef.current = pauseTime; // Update the pauseTimeRef when pauseTime changes
-    }, [pauseTime]);
-
-    useEffect(() => {
-        resumeTimeRef.current = resumeTime; // Update the resumeTimeRef when resumeTime changes
-    }, [resumeTime]);
+    const handlePauseDurationChange = (e) => {
+        setPauseDuration(Number(e.target.value));
+    };
 
     return (
-        <>
-            <div ref={playerRef}></div>
+        <div>
+            <div id="youtube-player"></div>
             <div>
                 <label>
-                    Pause Time (seconds):
-                    <input
-                        type="number"
-                        value={pauseTime}
-                        onChange={(e) => {
-                            setPauseTime(Number(e.target.value));
-                        }}
-                        min="1"
-                    />
-                </label>
-                <label>
-                    Resume Time (seconds):
-                    <input
-                        type="number"
-                        value={resumeTime}
-                        onChange={(e) => {
-                            setResumeTime(Number(e.target.value));
-                        }}
-                        min="1"
-                    />
+                    Play Duration (seconds):
+                    <input type="number" value={playDuration} onChange={handlePlayDurationChange} min="1" />
                 </label>
             </div>
-            <Timer secondsLeft={countdown} />
-            <button onClick={toggleVideo}>{isPlaying ? 'Pause Video' : 'Play Video'}</button>
-            <button className="block" onClick={() => {
-                setPauseTime(3);
-            }}>test</button>
-        </>
+            <div>
+                <label>
+                    Pause Duration (seconds):
+                    <input type="number" value={pauseDuration} onChange={handlePauseDurationChange} min="1" />
+                </label>
+            </div>
+            <div>
+                Status: {isPlaying ? 'Playing' : countdown !== null ? `Paused (${countdown}s remaining)` : 'Initial State'}
+            </div>
+        </div>
     );
-}
+};
+
+export default YouTubePlayer;
