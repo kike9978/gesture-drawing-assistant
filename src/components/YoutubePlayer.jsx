@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const YouTubePlayer = ({ videoId }) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -9,13 +9,11 @@ const YouTubePlayer = ({ videoId }) => {
     const timerRef = useRef(null);
 
     useEffect(() => {
-        // Load YouTube IFrame API
         const tag = document.createElement('script');
         tag.src = 'https://www.youtube.com/iframe_api';
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        // Initialize player when API is ready
         window.onYouTubeIframeAPIReady = () => {
             playerRef.current = new window.YT.Player('youtube-player', {
                 height: '360',
@@ -47,7 +45,7 @@ const YouTubePlayer = ({ videoId }) => {
         }
     };
 
-    const startPlayTimer = () => {
+    const startPlayTimer = useCallback(() => {
         clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
             if (playerRef.current && playerRef.current.pauseVideo) {
@@ -56,9 +54,9 @@ const YouTubePlayer = ({ videoId }) => {
                 startPauseTimer();
             }
         }, playDuration * 1000);
-    };
+    }, [playDuration, pauseDuration]);
 
-    const startPauseTimer = () => {
+    const startPauseTimer = useCallback(() => {
         let remainingTime = pauseDuration;
         const countdownInterval = setInterval(() => {
             remainingTime -= 1;
@@ -70,7 +68,7 @@ const YouTubePlayer = ({ videoId }) => {
                 }
             }
         }, 1000);
-    };
+    }, [pauseDuration]);
 
     useEffect(() => {
         return () => {
@@ -83,6 +81,13 @@ const YouTubePlayer = ({ videoId }) => {
             playerRef.current.loadVideoById(videoId);
         }
     }, [videoId]);
+
+    useEffect(() => {
+        if (isPlaying) {
+            clearTimeout(timerRef.current);
+            startPlayTimer();
+        }
+    }, [playDuration, isPlaying, startPlayTimer]);
 
     const handlePlayDurationChange = (e) => {
         setPlayDuration(Number(e.target.value));
