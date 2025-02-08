@@ -10,7 +10,6 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
     const [resumeDelay, setResumeDelay] = useState(
         isPinned ? (initialSettings?.resumeDelay || DEFAULT_RESUME_DELAY) : DEFAULT_RESUME_DELAY
     );
-    const [isHolding, setIsHolding] = useState(false);
     const [countdown, setCountdown] = useState(null);
     const [resumeCountdown, setResumeCountdown] = useState(null);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -21,6 +20,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
     const countdownIntervalRef = useRef(null);
     const pauseDurationRef = useRef(pauseDuration);
     const resumeDelayRef = useRef(resumeDelay);
+    const isHoldingRef = useRef(false);
 
     useEffect(() => {
         pauseDurationRef.current = pauseDuration;
@@ -80,7 +80,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
     }, []);
 
     const startPauseResumeTimer = useCallback(() => {
-        if (!playerRef.current || !isPlayerReady || isHolding) return;
+        if (!playerRef.current || !isPlayerReady || isHoldingRef.current) return;
 
         cleanupTimers();
 
@@ -105,7 +105,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
                 }, resumeDelayRef.current * 1000);
             }
         }, pauseDurationRef.current * 1000);
-    }, [isPlayerReady, isHolding, startCountdown]);
+    }, [isPlayerReady, startCountdown]);
 
     useEffect(() => {
         // Load YouTube API
@@ -157,16 +157,13 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
     const handleHoldToggle = () => {
         if (!playerRef.current || !isPlayerReady) return;
 
-        setIsHolding(prev => {
-            const newHoldState = !prev;
-            if (newHoldState) {
-                cleanupTimers();
-                playerRef.current.pauseVideo();
-            } else {
-                playerRef.current.playVideo();
-            }
-            return newHoldState;
-        });
+        isHoldingRef.current = !isHoldingRef.current;
+        if (isHoldingRef.current) {
+            cleanupTimers();
+            playerRef.current.pauseVideo();
+        } else {
+            playerRef.current.playVideo();
+        }
     };
 
     const handlePinToggle = () => {
@@ -220,12 +217,12 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
                     <button
                         onClick={handleHoldToggle}
                         className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
-                            isHolding 
+                            isHoldingRef.current 
                                 ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
-                        {isHolding ? 'Release Hold' : 'Hold Frame'}
+                        {isHoldingRef.current ? 'Release Hold' : 'Hold Frame'}
                     </button>
                     
                     {/* Pin Button */}
@@ -261,7 +258,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
                                 value={pauseDuration}
                                 onChange={handlePauseDurationChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                disabled={isHolding}
+                                disabled={isHoldingRef.current}
                             />
                         </label>
                     </div>
@@ -277,14 +274,14 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
                                 value={resumeDelay}
                                 onChange={handleResumeDelayChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                disabled={isHolding}
+                                disabled={isHoldingRef.current}
                             />
                         </label>
                     </div>
                 </div>
 
                 {/* Timer Display */}
-                {!isHolding && (countdown !== null || resumeCountdown !== null) && (
+                {!isHoldingRef.current && (countdown !== null || resumeCountdown !== null) && (
                     <div className="border-t pt-4">
                         <div className="text-center space-y-1">
                             <span className="text-sm text-gray-600">
