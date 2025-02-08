@@ -12,6 +12,7 @@ const VideoPlayer = ({ videoId }) => {
     const [countdown, setCountdown] = useState(null);
     const [resumeCountdown, setResumeCountdown] = useState(null);
     const countdownIntervalRef = useRef(null);
+    const [isHolding, setIsHolding] = useState(false);
 
     // Update refs whenever values change
     useEffect(() => {
@@ -71,6 +72,9 @@ const VideoPlayer = ({ videoId }) => {
     }, []);
 
     const startPauseResumeTimer = () => {
+        // Don't start timers if we're holding
+        if (isHolding) return;
+
         // Clear any existing timeouts
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
@@ -105,6 +109,26 @@ const VideoPlayer = ({ videoId }) => {
                 }, resumeDelayRef.current * 1000);
             }
         }, pauseDurationRef.current * 1000);
+    };
+
+    const handleHoldToggle = () => {
+        setIsHolding(prev => {
+            const newHoldState = !prev;
+            if (newHoldState) {
+                // Clear any existing timeouts and countdowns
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+                if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                setCountdown(null);
+                setResumeCountdown(null);
+                // Pause the video
+                playerRef.current?.pauseVideo();
+            } else {
+                // Resume the video when hold is released
+                playerRef.current?.playVideo();
+            }
+            return newHoldState;
+        });
     };
 
     // Initialize player when API is ready and videoId changes
@@ -158,6 +182,18 @@ const VideoPlayer = ({ videoId }) => {
 
             {/* Controls Side Panel */}
             <div className="w-80 bg-white rounded-lg p-4 shadow-lg flex flex-col gap-6">
+                {/* Hold Button */}
+                <button
+                    onClick={handleHoldToggle}
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                        isHolding 
+                            ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                    {isHolding ? 'Release Hold' : 'Hold Frame'}
+                </button>
+
                 <div className="space-y-6">
                     {/* Pause controls */}
                     <div className="space-y-2">
@@ -170,6 +206,7 @@ const VideoPlayer = ({ videoId }) => {
                                 value={pauseDuration}
                                 onChange={(e) => setPauseDuration(Number(e.target.value))}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={isHolding}
                             />
                         </label>
                     </div>
@@ -185,13 +222,14 @@ const VideoPlayer = ({ videoId }) => {
                                 value={resumeDelay}
                                 onChange={(e) => setResumeDelay(Number(e.target.value))}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={isHolding}
                             />
                         </label>
                     </div>
                 </div>
 
                 {/* Timer Display */}
-                {(countdown !== null || resumeCountdown !== null) && (
+                {!isHolding && (countdown !== null || resumeCountdown !== null) && (
                     <div className="border-t pt-4">
                         <div className="text-center space-y-1">
                             <span className="text-sm text-gray-600">
