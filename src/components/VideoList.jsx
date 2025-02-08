@@ -1,25 +1,16 @@
 import React from 'react';
-
-function VideoListItem({ video, onVideoClick }) {
-
-    return (
-        <li key={video.id.videoId} onClick={() => onVideoClick(video.id.videoId)}>
-
-            <img src={video.snippet.thumbnails.high.url} alt={video.snippet.title} />
-            <h3>{video.snippet.title}</h3>
-
-        </li>
-    );
-}
+import VideoCard from './VideoCard';
 
 export default function VideoList({ videos, onVideoClick }) {
-
     return (
-        <ul>
-            {videos.map((video) => (
-                <VideoListItem key={video.id.videoId} video={video} onVideoClick={onVideoClick} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {videos.map((video, index) => (
+                <VideoCard 
+                    key={video.id?.videoId || video.etag || `video-${index}`}
+                    video={video} 
+                    onVideoClick={onVideoClick} 
+                />
             ))}
-        </ul>
+        </div>
     );
-
 }
