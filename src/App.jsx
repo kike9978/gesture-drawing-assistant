@@ -53,14 +53,24 @@ function App() {
 
   const handleSearch = useCallback(async (query) => {
     setError(null);
+    // This will handle both empty strings and strings with only spaces
+    if (!query.trim() || query.trim().length < 3) {
+        setVideos([]);
+        setNextPageToken(null);
+        const params = new URLSearchParams(searchParams);
+        params.delete('search');
+        navigate(`/?${params.toString()}`);
+        return;
+    }
+
     const params = new URLSearchParams(searchParams);
     params.set('search', query);
     navigate(`/?${params.toString()}`);
     
     const data = await fetchVideos(query);
     if (data) {
-      setVideos(data.items);
-      setNextPageToken(data.nextPageToken);
+        setVideos(data.items);
+        setNextPageToken(data.nextPageToken);
     }
   }, [navigate, fetchVideos, searchParams]);
 
@@ -88,6 +98,15 @@ function App() {
     }
   }, [searchQuery, nextPageToken, fetchVideos]);
 
+  const handleVideoUrlSelect = useCallback((newVideoId) => {
+    setError(null); // Clear any existing error
+    const params = new URLSearchParams(searchParams);
+    params.set('v', newVideoId);
+    // Remove search query when directly opening a video URL
+    params.delete('search');
+    navigate(`/?${params.toString()}`);
+  }, [navigate, searchParams]);
+
   // Load initial search results if search query is present in URL
   useEffect(() => {
     if (searchQuery && videos.length === 0) {
@@ -105,7 +124,7 @@ function App() {
         <div className="max-w-2xl mx-auto mb-8">
           <SearchForm 
             onSearch={handleSearch} 
-            onVideoSelect={handleVideoSelect}
+            onVideoSelect={handleVideoUrlSelect}
             initialQuery={searchQuery} 
           />
         </div>
