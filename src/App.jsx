@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import SearchForm from './components/SearchForm';
 import VideoList from './components/VideoList';
-import YoutubePlayer from './components/YoutubePlayer';
+import VideoPlayer from './components/VideoPlayer';
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 const RESULTS_PER_PAGE = 10;
@@ -13,11 +13,10 @@ function App() {
   const [error, setError] = useState(null);
   const [nextPageToken, setNextPageToken] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   
   // Get video ID and search query from URL
-  const selectedVideoId = searchParams.get('v');
+  const videoId = searchParams.get('v');
   const searchQuery = searchParams.get('search');
 
   const fetchVideos = useCallback(async (query, pageToken = '') => {
@@ -34,7 +33,6 @@ function App() {
       
       const data = await response.json();
       
-      // Filter out any items that don't have a valid videoId
       const filteredItems = data.items.filter(item => 
         item.id?.videoId && 
         item.snippet?.title && 
@@ -54,13 +52,31 @@ function App() {
   }, []);
 
   const handleSearch = useCallback(async (query) => {
-    navigate(`/?search=${encodeURIComponent(query)}`);
+    // Update URL with search query while preserving video ID if present
+    const params = new URLSearchParams(searchParams);
+    params.set('search', query);
+    navigate(`/?${params.toString()}`);
+    
     const data = await fetchVideos(query);
     if (data) {
       setVideos(data.items);
       setNextPageToken(data.nextPageToken);
     }
-  }, [navigate, fetchVideos]);
+  }, [navigate, fetchVideos, searchParams]);
+
+  const handleVideoSelect = useCallback((newVideoId) => {
+    // Update URL with video ID while preserving search query
+    const params = new URLSearchParams(searchParams);
+    params.set('v', newVideoId);
+    navigate(`/?${params.toString()}`);
+  }, [navigate, searchParams]);
+
+  const handleBackToSearch = useCallback(() => {
+    // Remove video ID from URL while preserving search query
+    const params = new URLSearchParams(searchParams);
+    params.delete('v');
+    navigate(`/?${params.toString()}`);
+  }, [navigate, searchParams]);
 
   const handleLoadMore = useCallback(async () => {
     if (!searchQuery || !nextPageToken) return;
@@ -71,16 +87,6 @@ function App() {
       setNextPageToken(data.nextPageToken);
     }
   }, [searchQuery, nextPageToken, fetchVideos]);
-
-  const handleVideoClick = useCallback((videoId) => {
-    // Update URL with video ID while preserving search query
-    navigate(`/?v=${videoId}${searchQuery ? `&search=${searchQuery}` : ''}`);
-  }, [navigate, searchQuery]);
-
-  const handleBackClick = useCallback(() => {
-    // Go back to search results while preserving search query
-    navigate(searchQuery ? `/?search=${searchQuery}` : '/');
-  }, [navigate, searchQuery]);
 
   // Load initial search results if search query is present in URL
   useEffect(() => {
@@ -114,10 +120,10 @@ function App() {
         )}
 
         <div className="flex-1 overflow-y-auto">
-          {selectedVideoId ? (
+          {videoId ? (
             <div className="mb-12 bg-white rounded-lg shadow-lg p-6 max-w-5xl mx-auto h-auto">
               <button
-                onClick={handleBackClick}
+                onClick={handleBackToSearch}
                 className="mb-4 px-4 py-2 flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors"
               >
                 <svg 
@@ -134,7 +140,7 @@ function App() {
                 </svg>
                 Back to Search Results
               </button>
-              <YoutubePlayer videoId={selectedVideoId} />
+              <VideoPlayer videoId={videoId} />
             </div>
           ) : (
             videos.length > 0 && (
@@ -142,7 +148,7 @@ function App() {
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                   Search Results
                 </h2>
-                <VideoList videos={videos} onVideoClick={handleVideoClick} />
+                <VideoList videos={videos} onVideoClick={handleVideoSelect} />
                 
                 {nextPageToken && (
                   <div className="mt-8 text-center">
