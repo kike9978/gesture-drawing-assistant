@@ -21,8 +21,16 @@ function App() {
   const searchQuery = searchParams.get('search');
 
   // Add new state for pinned videos and sidebar
-  const [pinnedVideos, setPinnedVideos] = useState([]);
+  const [pinnedVideos, setPinnedVideos] = useState(() => {
+    const saved = localStorage.getItem('pinnedVideos');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Add effect to save to localStorage whenever pinnedVideos changes
+  useEffect(() => {
+    localStorage.setItem('pinnedVideos', JSON.stringify(pinnedVideos));
+  }, [pinnedVideos]);
 
   const fetchVideos = useCallback(async (query, pageToken = '') => {
     setIsLoading(true);
@@ -119,16 +127,59 @@ function App() {
     }
   }, [searchQuery, handleSearch, videos.length]);
 
-  // Add handler for pin/unpin
+  // Update the pin toggle handler to handle both pin and unpin cases
   const handlePinToggle = (videoData) => {
-    setPinnedVideos(prev => {
-      const exists = prev.some(v => v.videoId === videoData.videoId);
-      if (exists) {
-        return prev.filter(v => v.videoId !== videoData.videoId);
-      }
-      return [...prev, videoData];
-    });
+    try {
+        setPinnedVideos(prev => {
+            // Handle unpin operation
+            if ('videoId' in videoData && Object.keys(videoData).length === 1) {
+                return prev.filter(v => v.videoId !== videoData.videoId);
+            }
+
+            // For pinning or updating, check if video already exists
+            const existingIndex = prev.findIndex(v => v.videoId === videoData.videoId);
+            
+            if (existingIndex >= 0) {
+                // Update existing pin
+                const updatedVideos = [...prev];
+                updatedVideos[existingIndex] = {
+                    ...prev[existingIndex],
+                    ...videoData,
+                    pinnedAt: prev[existingIndex].pinnedAt // Keep original pin timestamp
+                };
+                return updatedVideos;
+            }
+
+            // Add new pin
+            return [...prev, {
+                ...videoData,
+                pinnedAt: new Date().toISOString()
+            }];
+        });
+    } catch (err) {
+        console.error('Pin toggle error:', err);
+        setError('Failed to pin video. Please try again.');
+    }
   };
+
+  // Add a function to clear all pinned videos
+  const handleClearPinnedVideos = useCallback(() => {
+    setPinnedVideos([]);
+    localStorage.removeItem('pinnedVideos');
+  }, []);
+
+  // Add error handling for localStorage
+  useEffect(() => {
+    const handleStorageError = () => {
+      setError('Failed to save pinned videos. Local storage might be full.');
+    };
+
+    try {
+      localStorage.setItem('pinnedVideos', JSON.stringify(pinnedVideos));
+    } catch (err) {
+      handleStorageError();
+    }
+  }, [pinnedVideos]);
 
   // Add handler for selecting pinned video
   const handlePinnedVideoSelect = (video) => {
@@ -144,8 +195,9 @@ function App() {
         onToggle={() => setIsSidebarOpen(prev => !prev)}
         pinnedVideos={pinnedVideos}
         onVideoSelect={handlePinnedVideoSelect}
-        onRemovePin={(videoId) => handlePinToggle({ videoId })}
+        onRemovePin={videoId => handlePinToggle({ videoId })}
         currentVideoId={videoId}
+        onClearAll={handleClearPinnedVideos}
       />
       
       <div className={`transition-all duration-300 ${

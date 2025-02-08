@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Input from './ui/Input';
+import Button from './ui/Button';
+import Card from './ui/Card';
+import Grid from './ui/Grid';
 
 // Custom debounce function
 function useDebounce(callback, delay) {
@@ -22,6 +26,13 @@ function useDebounce(callback, delay) {
         }, delay);
     }, [callback, delay]);
 }
+
+const SearchSection = ({ title, children }) => (
+    <div className="space-y-2">
+        <h2 className="text-lg font-semibold text-gray-700">{title}</h2>
+        {children}
+    </div>
+);
 
 function SearchForm({ onSearch, onVideoSelect, initialQuery = '' }) {
     // Initialize with empty string if initialQuery is null or undefined
@@ -98,46 +109,33 @@ function SearchForm({ onSearch, onVideoSelect, initialQuery = '' }) {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Search Videos Form */}
-            <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-gray-700">Search Videos</h2>
+        <Grid cols={2}>
+            <SearchSection title="Search Videos">
                 <form onSubmit={handleSearch} className="flex gap-2">
-                    <input
-                        type="text"
-                        value={searchQuery || ''} // Ensure value is never null
+                    <Input
+                        value={searchQuery || ''}
                         onChange={handleSearchChange}
                         placeholder="Search for videos..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        className="flex-1"
                     />
-                    <button
-                        type="submit"
-                        className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                    >
+                    <Button type="submit">
                         Search
-                    </button>
+                    </Button>
                 </form>
-            </div>
+            </SearchSection>
 
-            {/* Direct Video URL Form */}
-            <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-gray-700">Open Video URL</h2>
+            <SearchSection title="Open Video URL">
                 <form onSubmit={handleVideoUrl} className="flex gap-2">
-                    <input
-                        type="text"
+                    <Input
                         value={videoUrl}
                         onChange={handleUrlChange}
                         placeholder="Paste YouTube URL..."
-                        className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
-                            urlError ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        error={urlError}
+                        className="flex-1"
                     />
-                    <button
-                        type="submit"
-                        className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                    >
+                    <Button type="submit">
                         Open
-                    </button>
+                    </Button>
                 </form>
                 {urlError ? (
                     <p className="text-sm text-red-600">{urlError}</p>
@@ -146,8 +144,8 @@ function SearchForm({ onSearch, onVideoSelect, initialQuery = '' }) {
                         Supported formats: youtube.com/watch?v=... or youtu.be/...
                     </p>
                 )}
-            </div>
-        </div>
+            </SearchSection>
+        </Grid>
     );
 }
 
