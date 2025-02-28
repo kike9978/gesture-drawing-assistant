@@ -11,9 +11,7 @@ const Layout = ({
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {sidebar}
-      <div className={`transition-all duration-300 ${
-        isSidebarOpen ? 'ml-80' : 'ml-12'
-      } ${className}`}>
+      <div className={`transition-all duration-300  ${className}`}>
         <Container>
           <Heading level={1} className="text-center mb-8">
             YouTube Search
