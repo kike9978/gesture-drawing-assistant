@@ -12,7 +12,7 @@ import Text from './ui/Text';
 const SidebarToggleButton = ({ onClick, isOpen }) => (
   <IconButton
     onClick={onClick}
-    className="absolute -right-3 top-8 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50"
+    className={`absolute ${isOpen? "": "md:"}-right-3 top-8 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50`}
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"

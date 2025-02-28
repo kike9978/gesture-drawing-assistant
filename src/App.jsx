@@ -15,7 +15,7 @@ function App() {
   const [nextPageToken, setNextPageToken] = useState(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   // Get video ID and search query from URL
   const videoId = searchParams.get('v');
   const searchQuery = searchParams.get('search');
@@ -25,7 +25,7 @@ function App() {
     const saved = localStorage.getItem('pinnedVideos');
     return saved ? JSON.parse(saved) : [];
   });
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Add effect to save to localStorage whenever pinnedVideos changes
   useEffect(() => {
@@ -39,19 +39,19 @@ function App() {
       const response = await fetch(
         `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${API_KEY}&maxResults=${RESULTS_PER_PAGE}&videoEmbeddable=true&type=video${pageToken ? `&pageToken=${pageToken}` : ''}`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch videos');
       }
-      
+
       const data = await response.json();
-      
-      const filteredItems = data.items.filter(item => 
-        item.id?.videoId && 
-        item.snippet?.title && 
+
+      const filteredItems = data.items.filter(item =>
+        item.id?.videoId &&
+        item.snippet?.title &&
         item.snippet?.thumbnails?.high?.url
       );
-      
+
       return {
         ...data,
         items: filteredItems
@@ -68,22 +68,22 @@ function App() {
     setError(null);
     // This will handle both empty strings and strings with only spaces
     if (!query.trim() || query.trim().length < 3) {
-        setVideos([]);
-        setNextPageToken(null);
-        const params = new URLSearchParams(searchParams);
-        params.delete('search');
-        navigate(`/?${params.toString()}`);
-        return;
+      setVideos([]);
+      setNextPageToken(null);
+      const params = new URLSearchParams(searchParams);
+      params.delete('search');
+      navigate(`/?${params.toString()}`);
+      return;
     }
 
     const params = new URLSearchParams(searchParams);
     params.set('search', query);
     navigate(`/?${params.toString()}`);
-    
+
     const data = await fetchVideos(query);
     if (data) {
-        setVideos(data.items);
-        setNextPageToken(data.nextPageToken);
+      setVideos(data.items);
+      setNextPageToken(data.nextPageToken);
     }
   }, [navigate, fetchVideos, searchParams]);
 
@@ -103,7 +103,7 @@ function App() {
 
   const handleLoadMore = useCallback(async () => {
     if (!searchQuery || !nextPageToken) return;
-    
+
     const data = await fetchVideos(searchQuery, nextPageToken);
     if (data) {
       setVideos(prevVideos => [...prevVideos, ...data.items]);
@@ -130,35 +130,35 @@ function App() {
   // Update the pin toggle handler to handle both pin and unpin cases
   const handlePinToggle = (videoData) => {
     try {
-        setPinnedVideos(prev => {
-            // Handle unpin operation
-            if ('videoId' in videoData && Object.keys(videoData).length === 1) {
-                return prev.filter(v => v.videoId !== videoData.videoId);
-            }
+      setPinnedVideos(prev => {
+        // Handle unpin operation
+        if ('videoId' in videoData && Object.keys(videoData).length === 1) {
+          return prev.filter(v => v.videoId !== videoData.videoId);
+        }
 
-            // For pinning or updating, check if video already exists
-            const existingIndex = prev.findIndex(v => v.videoId === videoData.videoId);
-            
-            if (existingIndex >= 0) {
-                // Update existing pin
-                const updatedVideos = [...prev];
-                updatedVideos[existingIndex] = {
-                    ...prev[existingIndex],
-                    ...videoData,
-                    pinnedAt: prev[existingIndex].pinnedAt // Keep original pin timestamp
-                };
-                return updatedVideos;
-            }
+        // For pinning or updating, check if video already exists
+        const existingIndex = prev.findIndex(v => v.videoId === videoData.videoId);
 
-            // Add new pin
-            return [...prev, {
-                ...videoData,
-                pinnedAt: new Date().toISOString()
-            }];
-        });
+        if (existingIndex >= 0) {
+          // Update existing pin
+          const updatedVideos = [...prev];
+          updatedVideos[existingIndex] = {
+            ...prev[existingIndex],
+            ...videoData,
+            pinnedAt: prev[existingIndex].pinnedAt // Keep original pin timestamp
+          };
+          return updatedVideos;
+        }
+
+        // Add new pin
+        return [...prev, {
+          ...videoData,
+          pinnedAt: new Date().toISOString()
+        }];
+      });
     } catch (err) {
-        console.error('Pin toggle error:', err);
-        setError('Failed to pin video. Please try again.');
+      console.error('Pin toggle error:', err);
+      setError('Failed to pin video. Please try again.');
     }
   };
 
@@ -199,20 +199,17 @@ function App() {
         currentVideoId={videoId}
         onClearAll={handleClearPinnedVideos}
       />
-      
-      <div className={`transition-all duration-300 ${
-        isSidebarOpen ? 'ml-80' : 'ml-12'
-      }`}>
+
+      <div className={`transition-all duration-300 `}>
         <div className="container mx-auto px-4 py-8 flex-1 flex flex-col">
           <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
-            YouTube Search
+            Gesture Drawing Assistant
           </h1>
-          
           <div className="max-w-2xl mx-auto mb-8">
-            <SearchForm 
-              onSearch={handleSearch} 
+            <SearchForm
+              onSearch={handleSearch}
               onVideoSelect={handleVideoUrlSelect}
-              initialQuery={searchQuery} 
+              initialQuery={searchQuery}
             />
           </div>
 
@@ -237,7 +234,7 @@ function App() {
                   viewBox="0 0 20 20"
                 >
                   <title>Close</title>
-                  <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                  <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
                 </svg>
               </button>
             </div>
@@ -250,21 +247,21 @@ function App() {
                   onClick={handleBackToSearch}
                   className="mb-4 px-4 py-2 flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors"
                 >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5" 
-                    viewBox="0 0 20 20" 
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
                     fill="currentColor"
                   >
-                    <path 
-                      fillRule="evenodd" 
-                      d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" 
-                      clipRule="evenodd" 
+                    <path
+                      fillRule="evenodd"
+                      d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                      clipRule="evenodd"
                     />
                   </svg>
                   Back to Search Results
                 </button>
-                <VideoPlayer 
+                <VideoPlayer
                   videoId={videoId}
                   onPinToggle={handlePinToggle}
                   isPinned={pinnedVideos.some(v => v.videoId === videoId)}
@@ -278,7 +275,7 @@ function App() {
                     Search Results
                   </h2>
                   <VideoList videos={videos} onVideoClick={handleVideoSelect} />
-                  
+
                   {nextPageToken && (
                     <div className="mt-8 text-center">
                       <button
