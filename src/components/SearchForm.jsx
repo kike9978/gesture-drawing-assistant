@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Input from './ui/Input';
 import Button from './ui/Button';
-import Card from './ui/Card';
 import Grid from './ui/Grid';
 
 // Custom debounce function
@@ -109,20 +108,8 @@ function SearchForm({ onSearch, onVideoSelect, initialQuery = '' }) {
     };
 
     return (
-        <Grid cols={2}>
-            <SearchSection title="Search Videos">
-                <form onSubmit={handleSearch} className="flex gap-2">
-                    <Input
-                        value={searchQuery || ''}
-                        onChange={handleSearchChange}
-                        placeholder="Search for videos..."
-                        className="flex-1"
-                    />
-                    <Button type="submit">
-                        Search
-                    </Button>
-                </form>
-            </SearchSection>
+        <Grid cols={1}>
+            
 
             <SearchSection title="Open Video URL">
                 <form onSubmit={handleVideoUrl} className="flex gap-2">
