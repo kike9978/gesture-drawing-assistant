@@ -183,6 +183,9 @@ function App() {
 
   // Add handler for selecting pinned video
   const handlePinnedVideoSelect = (video) => {
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
     const params = new URLSearchParams(searchParams);
     params.set('v', video.videoId);
     navigate(`/?${params.toString()}`);
