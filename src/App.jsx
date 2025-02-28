@@ -243,24 +243,7 @@ function App() {
           <div className="flex-1 overflow-y-auto">
             {videoId ? (
               <div className="mb-12 bg-white rounded-lg shadow-lg p-6 max-w-5xl mx-auto h-auto">
-                <button
-                  onClick={handleBackToSearch}
-                  className="mb-4 px-4 py-2 flex items-center gap-2 text-blue-500 hover:text-blue-600 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Back to Search Results
-                </button>
+               
                 <VideoPlayer
                   videoId={videoId}
                   onPinToggle={handlePinToggle}
