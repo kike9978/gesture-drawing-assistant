@@ -1,14 +1,13 @@
 import React from 'react';
 
-const Stack = ({ 
-  children, 
-  gap = 4,
+const Stack = ({
+  children,
   className = '',
-  ...props 
+  ...props
 }) => {
   return (
-    <div 
-      className={`space-y-${gap} ${className}`}
+    <div
+      className={`flex flex-col gap-2 ${className}`}
       {...props}
     >
       {children}
