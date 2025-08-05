@@ -13,7 +13,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
     const [countdown, setCountdown] = useState(null);
     const [resumeCountdown, setResumeCountdown] = useState(null);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
-    
+
     const playerRef = useRef(null);
     const timeoutRef = useRef(null);
     const resumeTimeoutRef = useRef(null);
@@ -66,7 +66,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
         }
 
         setterFunction(duration);
-        
+
         countdownIntervalRef.current = setInterval(() => {
             setterFunction(prev => {
                 if (prev <= 0.1) {
@@ -204,35 +204,33 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
     };
 
     return (
-        <div className="flex gap-6 flex-col md:flex-row">
+        <div className="flex gap-6 flex-col ">
             <div className="flex-1">
                 <div className="aspect-w-16 aspect-h-9">
                     <div id="youtube-player" className="rounded-lg w-full h-full" />
                 </div>
             </div>
             {/* Controls Side Panel */}
-            <div className="md:w-80 bg-white rounded-lg p-4 shadow-lg flex flex-col gap-6">
+            <div className=" bg-white rounded-lg p-4 shadow-lg flex flex-col md:flex-row-reverse gap-6 md:items-end md:justify-between">
                 <div className="flex gap-2">
                     {/* Hold Button */}
                     <button
                         onClick={handleHoldToggle}
-                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
-                            isHoldingRef.current 
-                                ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${isHoldingRef.current
+                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
                     >
                         {isHoldingRef.current ? 'Release Hold' : 'Hold Frame'}
                     </button>
-                    
+
                     {/* Pin Button */}
                     <button
                         onClick={handlePinToggle}
-                        className={`px-4 py-3 rounded-lg font-semibold transition-colors ${
-                            isPinned
-                                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`px-4 py-3 rounded-lg font-semibold transition-colors ${isPinned
+                            ? 'bg-blue-500 text-white hover:bg-blue-600'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
                         title={isPinned ? 'Unpin Video' : 'Pin Video'}
                     >
                         <svg
@@ -246,7 +244,7 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
                     </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="gap-6 flex flex-col md:flex-row md:items-end">
                     {/* Pause controls */}
                     <div className="space-y-2">
                         <label className="flex flex-col gap-2">
@@ -281,20 +279,19 @@ const VideoPlayer = ({ videoId, onPinToggle, isPinned, initialSettings }) => {
                 </div>
 
                 {/* Timer Display */}
-                {!isHoldingRef.current && (countdown !== null || resumeCountdown !== null) && (
-                    <div className="border-t pt-4">
+                <div className="border-t md:border-t-0 pt-4">
+                    {!isHoldingRef.current && (countdown !== null || resumeCountdown !== null) && (
                         <div className="text-center space-y-1">
                             <span className="text-sm text-gray-600">
                                 {countdown !== null ? 'Pausing in:' : 'Resuming in:'}
                             </span>
-                            <div className={`text-3xl font-bold ${
-                                countdown !== null ? 'text-blue-600' : 'text-green-600'
-                            }`}>
+                            <div className={`text-3xl font-bold ${countdown !== null ? 'text-blue-600' : 'text-green-600'
+                                }`}>
                                 {countdown !== null ? countdown.toFixed(1) : resumeCountdown.toFixed(1)}s
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

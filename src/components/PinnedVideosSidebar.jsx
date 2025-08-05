@@ -12,13 +12,12 @@ import Text from './ui/Text';
 const SidebarToggleButton = ({ onClick, isOpen }) => (
   <IconButton
     onClick={onClick}
-    className={`absolute ${isOpen? "": "md:"}-right-3 top-8 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50`}
+    className={`absolute ${isOpen ? "" : "md:"}-right-3 top-8 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50`}
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`h-5 w-5 text-gray-600 transition-transform duration-300 ${
-        isOpen ? 'rotate-180' : ''
-      }`}
+      className={`h-5 w-5 text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''
+        }`}
       viewBox="0 0 20 20"
       fill="currentColor"
     >
@@ -31,11 +30,11 @@ const SidebarToggleButton = ({ onClick, isOpen }) => (
   </IconButton>
 );
 
-const PinnedVideosSidebar = ({ 
-  isOpen, 
-  onToggle, 
-  pinnedVideos, 
-  onVideoSelect, 
+const PinnedVideosSidebar = ({
+  isOpen,
+  onToggle,
+  pinnedVideos,
+  onVideoSelect,
   onRemovePin,
   currentVideoId,
   onClearAll
@@ -60,7 +59,7 @@ const PinnedVideosSidebar = ({
             )}
           </Flex>
 
-          <Stack gap={4}>
+          <Stack >
             {pinnedVideos.map((video) => (
               <PinnedVideoCard
                 key={video.videoId}
@@ -74,7 +73,7 @@ const PinnedVideosSidebar = ({
                 onRemove={onRemovePin}
               />
             ))}
-            
+
             {pinnedVideos.length === 0 && (
               <Text size="sm" color="gray" align="center">
                 No pinned videos yet
